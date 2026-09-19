@@ -1,0 +1,478 @@
+﻿@page "/registration/{StudentId:int}/{FacultyId:int}/{MajorId:int}"
+@using Microsoft.AspNetCore.Components.Web
+@using Shared.Models
+@using System.Net.Http.Json
+@using System.Linq
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<div class="container mt-4">
+    @if (studentHeader != null)
+    {
+        <div class="card bg-light mb-4 shadow-sm">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-1 text-primary">@studentHeader.FullName</h4>
+                    <p class="mb-0 text-muted">
+                        <strong>Faculty:</strong> @studentHeader.FacultyName | 
+                        <strong>Major:</strong> @studentHeader.MajorName
+                        <strong>GPA:</strong> @studentHeader.Gpa.ToString("0.00")
+                    </p>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-secondary fs-6 mb-1">@studentHeader.CurrentSemester</span>
+                    <div>
+                        <span class="badge bg-primary fs-6">
+                            Selected Credits: @TotalCredits / @MaxCreditHours
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Semester Course Registration</h3>
+    </div>
+    <hr />
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <strong>Action Blocked:</strong> @errorMessage
+            <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>Success!</strong> @successMessage
+            <button type="button" class="btn-close" @onclick="() => successMessage = string.Empty"></button>
+        </div>
+    }   
+    
+    <h5 class="mt-4">Available Courses</h5>
+    <table class="table table-bordered align-middle mt-2">
+        <thead class="table-light">
+            <tr>
+                <th>Code</th>
+                <th>Title</th>
+                <th class="text-center">Credits</th>
+                <th class="text-center">Capacity</th>
+                <th>Instructor & TA</th>
+                <th class="text-center">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+        @if (isLoading)
+        {
+            <tr>
+                <td colspan="6" class="text-center py-4"><em>Loading available courses...</em></td>
+            </tr>
+        }
+        else if (availableCourses != null && availableCourses.Any())
+        {   
+            @foreach (var course in availableCourses)
+            {
+                @foreach (var slot in course.ScheduleSlots)
+                {
+                    var isFull = course.Capacity > 0 && course.EnrolledCount >= course.Capacity;
+                    var isSelected = selectedSlotIds.Contains(slot.Id);
+                    var isAnyCourseSectionSelected = selectedSlotIds.Any(sId => course.ScheduleSlots.Any(s => s.Id == sId));
+
+                    <tr>
+                        <td class="fw-bold">
+                            @course.Code 
+                            <span class="badge bg-secondary ms-1">@slot.SectionName</span>
+                        </td>
+                        <td>
+                            @course.Title
+                            <div class="small text-muted">
+                                @slot.Day (@slot.StartTime.ToString(@"hh\:mm") - @slot.EndTime.ToString(@"hh\:mm"))
+                            </div>
+                        </td>
+                        <td class="text-center">@course.CreditHours</td>
+                        <td class="text-center">@course.EnrolledCount / @course.Capacity</td>
+                        <td>@slot.LecturerName <small class="text-muted">(TA: @slot.TaName)</small></td>
+                        <td class="text-center">
+                            @if (isSelected)
+                            {
+                                <button class="btn btn-outline-secondary btn-sm" disabled>
+                                    Added
+                                </button>
+                            }
+                            else if (isAnyCourseSectionSelected)
+                            {
+                                <button class="btn btn-outline-secondary btn-sm" disabled title="Another section for this course is already selected">
+                                    Other Section Added
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-sm btn-primary" 
+                                        type="button"
+                                        disabled="@isFull" 
+                                        @onclick="@(() => AddSection(course.Id, slot.Id))">
+                                    @(isFull ? "Full" : "Add")
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">No courses available.</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+
+    <h5 class="mt-5">Selected Courses (@GetSelectedCourseSlots().Count)</h5>
+    @if (selectedSlotIds.Any())
+    {
+        <table class="table table-bordered align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Code</th>
+                    <th>Title</th>
+                    <th class="text-center">Credits</th>
+                    <th class="text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var course in GetSelectedCourseSlots())
+                {
+                    <tr>
+                        <td><strong>@course.CourseCode</strong></td>
+                        <td>@course.Title</td>
+                        <td class="text-center">@course.CreditHours</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-danger" @onclick="() => RemoveSection(course.SlotId)">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+            
+    <h5 class="mt-5">Weekly Timetable</h5>
+
+    @if (HasScheduleClash)
+    {
+        <div class="alert alert-warning fw-bold d-flex align-items-center">
+            <span class="me-2">⚠️</span> 
+            <span>Schedule Conflict Detected! Overlapping courses are marked with an "X". Resolve all clashes to enable registration.</span>
+        </div>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-bordered text-center align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 12%;">Time Slot</th>
+                    <th>Monday</th>
+                    <th>Tuesday</th>
+                    <th>Wednesday</th>
+                    <th>Thursday</th>
+                    <th>Friday</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var slot in timeSlots)
+                {
+                    var slotEnd = slot.Add(TimeSpan.FromHours(2));
+                    <tr>
+                        <td class="fw-bold bg-light">
+                            @slot.ToString(@"hh\:mm") - @slotEnd.ToString(@"hh\:mm")
+                        </td>
+                        @foreach (var day in daysOfWeek)
+                        {
+                            var matchingCourses = GetCoursesAt(day, slot);
+
+                            <td class="@(matchingCourses.Count > 1 ? "bg-danger bg-opacity-10" : matchingCourses.Any() ? "bg-success bg-opacity-10" : "")">
+                                @if (matchingCourses.Count > 1)
+                                {
+                                    <div class="badge bg-danger fs-6 p-2">
+                                        X (Clash)
+                                    </div>
+                                    <div class="small text-danger fw-bold mt-1">
+                                        @string.Join(" & ", matchingCourses.Select(c => c.CourseCode))
+                                    </div>
+                                }
+                                else if (matchingCourses.Count == 1)
+                                {
+                                    var c = matchingCourses.First();
+                                    <div class="p-1">
+                                        <strong class="text-primary">@c.CourseCode</strong><br />
+                                        <small class="text-dark">@c.Title</small><br />
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted opacity-25">—</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-end my-4">
+        <button class="btn btn-success btn-lg" 
+                disabled="@(!selectedSlotIds.Any() || HasScheduleClash || TotalCredits > 18)" 
+                @onclick="SubmitRegistration">
+            Submit Registration
+        </button>
+    </div>
+
+    @if (!selectedSlotIds.Any())
+    {
+        <div class="alert alert-light text-center border mt-3">
+            No courses selected yet. Click "Add" above to enroll.
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int StudentId { get; set; }
+    [Parameter] public int MajorId { get; set; }
+    [Parameter] public int FacultyId { get; set; }
+
+    private StudentHeaderDto? studentHeader;
+
+    private List<CourseDto> availableCourses = new();
+    private List<int> selectedSlotIds = new();
+    private List<string> completedCourseCodes = new();
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+
+    private int TotalCredits => GetSelectedCourseSlots()
+        .GroupBy(s => s.CourseId)
+        .Sum(g => g.First().CreditHours);
+    
+    private int MaxCreditHours => studentHeader?.Status switch
+    {
+        StudentStatus.Probation => 12,
+        StudentStatus.Warning => 12,
+        _ => 18
+    };
+
+    private bool HasScheduleClash => DetectClashes();
+    private List<DayOfWeek> daysOfWeek = new() { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday };
+    private List<TimeSpan> timeSlots = new() { new(8, 30, 0), new(10, 30, 0), new(12, 30, 0), new(14, 30, 0) };
+    private bool isLoading = true;
+
+    private void ToggleSlotSelection(int slotId, bool isChecked)
+    {
+        if (isChecked)
+        {
+            if (!selectedSlotIds.Contains(slotId))
+                selectedSlotIds.Add(slotId);
+        }
+        else
+        {
+            selectedSlotIds.Remove(slotId);
+        }
+    }
+
+    public class SelectedSectionViewModel
+    {
+        public int SlotId { get; set; }
+        public int CourseId { get; set; }
+        public string CourseCode { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string SectionName { get; set; } = "";
+        public int CreditHours { get; set; }
+        public string LecturerName { get; set; } = "";
+        public string TaName { get; set; } = "";
+        public DayOfWeek Day { get; set; }
+        public TimeSpan StartTime { get; set; }
+        public TimeSpan EndTime { get; set; }
+    }
+
+    private List<SelectedSectionViewModel> GetSelectedCourseSlots()
+    {
+        var list = new List<SelectedSectionViewModel>();
+        foreach (var course in availableCourses)
+        {
+            foreach (var slot in course.ScheduleSlots.Where(s => selectedSlotIds.Contains(s.Id)))
+            {
+                list.Add(new SelectedSectionViewModel
+                {
+                    SlotId = slot.Id,
+                    CourseId = course.Id,
+                    CourseCode = course.Code,
+                    Title = course.Title,
+                    SectionName = slot.SectionName,
+                    CreditHours = course.CreditHours,
+                    LecturerName = slot.LecturerName,
+                    TaName = slot.TaName,
+                    Day = slot.Day,
+                    StartTime = slot.StartTime,
+                    EndTime = slot.EndTime
+                });
+            }
+        }
+        return list
+            .GroupBy(x => x.CourseId)
+            .Select(g => g.First())
+            .ToList();
+    }
+
+    private void AddSection(int courseId, int slotId)
+    {
+        errorMessage = string.Empty;
+
+        var course = availableCourses.FirstOrDefault(c => c.Id == courseId);
+        if (course == null) return;
+
+        var existingSelectedSlotsForCourse = GetSelectedCourseSlots().Where(s => s.CourseId == courseId).ToList();
+        if (existingSelectedSlotsForCourse.Any())
+        {
+            errorMessage = $"You have already selected {existingSelectedSlotsForCourse.First().SectionName} for {course.Code}. Remove it first to switch sections.";
+            return;
+        }
+
+        if (TotalCredits + course.CreditHours > MaxCreditHours)
+        {
+            errorMessage = $"Cannot add {course.Code}. Total credits ({TotalCredits + course.CreditHours}) would exceed maximum allowed limit of {MaxCreditHours} credit hours.";
+            return;
+        }
+
+        if (!selectedSlotIds.Contains(slotId))
+        {
+            selectedSlotIds.Add(slotId);
+        }
+
+    }
+
+    private void RemoveSection(int slotId)
+    {
+        errorMessage = string.Empty;
+        selectedSlotIds.Remove(slotId);
+    }
+
+    private List<SelectedSectionViewModel> GetCoursesAt(DayOfWeek day, TimeSpan slot)
+    {
+        return GetSelectedCourseSlots()
+            .Where(s => s.Day == day && s.StartTime <= slot && s.EndTime > slot)
+            .ToList();
+    }
+
+    private bool DetectClashes()
+    {
+        foreach (var day in daysOfWeek)
+        {
+            foreach (var slot in timeSlots)
+            {
+                if (GetCoursesAt(day, slot).Count > 1) return true;
+            }
+        }
+        return false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+
+        var startDate = new DateTime(2026, 8, 25, 0, 0, 0);
+        var endDate = new DateTime(2026, 9, 13, 23, 59, 59);
+
+        @* if (DateTime.Now < startDate || DateTime.Now > endDate)
+        {
+            Navigation.NavigateTo($"/main-menu/{StudentId}/{FacultyId}/{MajorId}");
+            return;
+        } *@
+
+        try
+        {
+            var options = new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+
+            availableCourses = await Http.GetFromJsonAsync<List<CourseDto>>(
+                $"api/course/available/{FacultyId}/{MajorId}", 
+                options) ?? new List<CourseDto>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching courses: {ex.Message}");
+        }
+
+        try
+        {
+            studentHeader = await Http.GetFromJsonAsync<StudentHeaderDto>($"api/student/{StudentId}/header");
+            int resolvedFacultyId = (studentHeader?.FacultyId > 0) ? studentHeader.FacultyId : (FacultyId > 0 ? FacultyId : 1);
+
+            var completedTask = Http.GetFromJsonAsync<List<string>>($"api/student/{StudentId}/completed-courses");
+            var coursesTask = Http.GetFromJsonAsync<List<CourseDto>>($"api/course/available/{resolvedFacultyId}/{MajorId}");
+
+            await Task.WhenAll(completedTask, coursesTask);
+
+            completedCourseCodes = (await completedTask) ?? new();
+            availableCourses = (await coursesTask) ?? new();
+
+            foreach (var course in availableCourses)
+            {
+                course.Prerequisites ??= new();
+                course.ScheduleSlots ??= new();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load registration data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SubmitRegistration()
+    {
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        if (HasScheduleClash || TotalCredits > MaxCreditHours)
+        {
+            errorMessage = "Cannot submit registration while schedule conflicts exist or total credits exceed 18.";
+            return;
+        }
+
+        var selectedSlotsPayload = GetSelectedCourseSlots()
+        .GroupBy(s => s.CourseId)
+        .Select(g => new SelectedCourseSlotDto
+        {
+            CourseId = g.Key,
+            ScheduleSlotId = g.First().SlotId
+        })
+        .ToList();
+
+        var payload = new RegisterCoursesRequest { SelectedSlots = selectedSlotsPayload };
+
+        var response = await Http.PostAsJsonAsync($"api/student/{StudentId}/register", payload);
+
+        if (response.IsSuccessStatusCode)
+        {
+            successMessage = "Course registration submitted successfully!";
+            selectedSlotIds.Clear();
+        }
+        else
+        {
+            var serverError = await response.Content.ReadAsStringAsync();
+            errorMessage = string.IsNullOrWhiteSpace(serverError) 
+                ? $"Registration failed: {response.ReasonPhrase}" 
+                : $"Registration failed: {serverError}";
+        }
+    }
+}

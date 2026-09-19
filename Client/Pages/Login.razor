@@ -1,0 +1,69 @@
+﻿@page "/"
+@page "/login"
+@using Shared.Models
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<div class="card mx-auto mt-5" style="max-width: 400px;">
+    <div class="card-header bg-primary text-white">
+        <h4>Student Login</h4>
+    </div>
+    <div class="card-body">
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+        <div class="mb-3">
+            <label>Registration Number</label>
+            <input class="form-control" @bind="loginModel.RegistrationNumber" />
+        </div>
+        <div class="mb-3">
+            <label>Password</label>
+            <input type="password" class="form-control" @bind="loginModel.Password" />
+        </div>
+        <button class="btn btn-primary w-100" @onclick="HandleLogin">Login</button>
+    </div>
+</div>
+
+@code {
+    private LoginRequest loginModel = new();
+    private string errorMessage = string.Empty;
+
+    private async Task HandleLogin()
+    {
+        errorMessage = string.Empty;
+
+        try
+        {
+            // Note: Casing must match controller route 'api/Student/login'
+            var response = await Http.PostAsJsonAsync("api/Student/login", loginModel);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var student = await response.Content.ReadFromJsonAsync<Student>();
+                
+                if (student != null)
+                {
+                    // URL-encode full name to prevent route breaking on special characters or spaces
+                    var encodedName = Uri.EscapeDataString(student.FullName ?? "Student");
+                    int majorId = student.MajorId ?? 1;
+                    Navigation.NavigateTo($"/menu/{student.Id}/{majorId}/{encodedName}");
+                }
+            }
+            else
+            {
+                var serverError = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[CLIENT LOG] Server returned failure: {response.StatusCode} - {serverError}");
+                errorMessage = !string.IsNullOrWhiteSpace(serverError) 
+                    ? serverError 
+                    : "Invalid credentials. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[CLIENT LOG] Connection error: {ex.Message}");
+            errorMessage = $"Cannot connect to backend server. Details: {ex.Message}";
+        }
+    }
+}
