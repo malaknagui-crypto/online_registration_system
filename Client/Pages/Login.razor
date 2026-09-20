@@ -47,8 +47,9 @@
                 {
                     // URL-encode full name to prevent route breaking on special characters or spaces
                     var encodedName = Uri.EscapeDataString(student.FullName ?? "Student");
+                    int facultyId = student.FacultyId ?? 1;
                     int majorId = student.MajorId ?? 1;
-                    Navigation.NavigateTo($"/menu/{student.Id}/{majorId}/{encodedName}");
+                    Navigation.NavigateTo($"/menu/{student.Id}/{facultyId}/{majorId}/{encodedName}");
                 }
             }
             else

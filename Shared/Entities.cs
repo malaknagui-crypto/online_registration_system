@@ -42,6 +42,7 @@ public class StudentHeaderDto
     public StudentStatus Status { get; set; }
     public double Gpa { get; set; }
     public string MajorName { get; set; } = string.Empty;
+    public int MajorId { get; set; }
     public string CurrentSemester { get; set; } = string.Empty;
     public int CurrentlyRegisteredCredits { get; set; }
 }

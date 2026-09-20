@@ -1,9 +1,18 @@
 @page "/transcript/{StudentId:int}"
+@inject NavigationManager Navigation
 
 <div class="container mt-4">
-    <h2>Unofficial Transcript</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Unofficial Transcript</h2>
+        <button class="btn btn-outline-secondary" @onclick="GoBackToMenu">&larr; Back to Dashboard</button>
+    </div>
 </div>
 
 @code {
     [Parameter] public int StudentId { get; set; }
+
+    private void GoBackToMenu()
+    {
+        Navigation.NavigateTo($"/menu/{StudentId}");
+    }
 }

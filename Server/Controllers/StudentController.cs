@@ -82,6 +82,7 @@ public class StudentController : ControllerBase
             FacultyName = student.Faculty?.Name ?? "N/A",
             FacultyId = student.FacultyId ?? 1, 
             MajorName = student.Major?.Name ?? "N/A",
+            MajorId = student.MajorId ?? 1,
             CurrentSemester = "Fall 2026/2027",
             Gpa = student.Gpa
         });
@@ -95,6 +96,15 @@ public class StudentController : ControllerBase
     [HttpPost("{id}/register")]
     public async Task<IActionResult> RegisterCourses(int id, [FromBody] RegisterCoursesRequest request)
     {
+        // The client disables the UI outside the window, but that guard is trivially
+        // bypassed by calling this endpoint directly - enforce it server-side too.
+        // Window is defined once in Shared/RegistrationPeriod.cs.
+        if (!RegistrationPeriod.IsOpen)
+        {
+            Console.WriteLine($"[DEBUG] Registration rejected for student {id}: outside the registration window.");
+            return StatusCode(StatusCodes.Status403Forbidden, RegistrationPeriod.ClosedMessage);
+        }
+
         if (request == null || request.SelectedSlots == null || !request.SelectedSlots.Any())
         {
             return BadRequest("Invalid payload. Please select at least one course section.");

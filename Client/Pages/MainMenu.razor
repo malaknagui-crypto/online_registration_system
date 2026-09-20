@@ -1,15 +1,27 @@
-﻿@page "/menu/{StudentId:int}/{MajorId:int}/{StudentName}"
-@page "/menu/{StudentId:int}/{StudentName}"
+@page "/menu/{StudentId:int}/{FacultyId:int}/{MajorId:int}/{StudentName}"
+@page "/menu/{StudentId:int}"
+@using Shared.Models
+@using System.Net.Http.Json
+@inject HttpClient Http
 @inject NavigationManager Navigation
 
 <div class="container mt-5">
-    <h2 class="mb-4">Student Dashboard</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">Student Dashboard</h2>
+            @if (!string.IsNullOrEmpty(StudentName))
+            {
+                <p class="text-muted mb-0">Welcome back, @StudentName</p>
+            }
+        </div>
+        <button class="btn btn-outline-secondary" @onclick="Logout">Logout</button>
+    </div>
 
-    @if (!string.IsNullOrEmpty(closedMessage))
+    @if (!string.IsNullOrEmpty(errorMessage))
     {
-        <div class="alert alert-warning alert-dismissible fade show mb-4 shadow-sm" role="alert">
-            <strong>Notice:</strong> @closedMessage
-            <button type="button" class="btn-close" @onclick="() => closedMessage = string.Empty"></button>
+        <div class="alert alert-danger alert-dismissible fade show mb-4 shadow-sm" role="alert">
+            @errorMessage
+            <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty"></button>
         </div>
     }
 
@@ -25,14 +37,15 @@
                         </p>
                     </div>
                     <div class="mt-4">
-                        <button class="btn btn-primary w-100 @(IsRegistrationOpen ? "" : "disabled")" 
+                        <button class="btn btn-primary w-100"
+                                disabled="@(!RegistrationPeriod.IsOpen || isLoading)"
                                 @onclick="GoToRegistration">
                             Go to Registration
                         </button>
-                        @if (!IsRegistrationOpen)
+                        @if (!RegistrationPeriod.IsOpen)
                         {
                             <small class="text-danger d-block mt-2 text-center">
-                                Registration opens Aug 25, 2026 - Sep 13, 2026.
+                                Registration opens @RegistrationPeriod.DisplayRange.
                             </small>
                         }
                     </div>
@@ -63,30 +76,59 @@
 
 @code {
     [Parameter] public int StudentId { get; set; }
-    [Parameter] public int MajorId { get; set; }
     [Parameter] public int FacultyId { get; set; }
+    [Parameter] public int MajorId { get; set; }
     [Parameter] public string StudentName { get; set; } = string.Empty;
 
-    private string closedMessage = string.Empty;
+    private string errorMessage = string.Empty;
+    private bool isLoading;
 
-    private readonly DateTime registrationStartDate = new DateTime(2026, 8, 25, 0, 0, 0);
-    private readonly DateTime registrationEndDate = new DateTime(2026, 9, 13, 23, 59, 59);
-    private bool IsRegistrationOpen => DateTime.Now >= registrationStartDate && DateTime.Now <= registrationEndDate;
-    
+    // Reached via the short "/menu/{StudentId}" route (e.g. the Back buttons on the
+    // other pages), so faculty/major/name have to be resolved from the server.
+    protected override async Task OnParametersSetAsync()
+    {
+        if (FacultyId > 0 && MajorId > 0) return;
+
+        isLoading = true;
+        try
+        {
+            var header = await Http.GetFromJsonAsync<StudentHeaderDto>($"api/student/{StudentId}/header");
+            if (header != null)
+            {
+                FacultyId = header.FacultyId;
+                MajorId = header.MajorId;
+                if (string.IsNullOrEmpty(StudentName))
+                    StudentName = header.FullName;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load your student details: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
     private void GoToRegistration()
     {
-        if (IsRegistrationOpen)
+        if (!RegistrationPeriod.IsOpen)
         {
-            Navigation.NavigateTo($"/registration/{StudentId}/{FacultyId}/{MajorId}");
+            errorMessage = RegistrationPeriod.ClosedMessage;
+            return;
         }
-        else
-        {
-            closedMessage = "Registration is currently closed.";
-        }
+
+        Navigation.NavigateTo($"/registration/{StudentId}/{FacultyId}/{MajorId}");
     }
 
     private void GoToTranscript()
     {
         Navigation.NavigateTo($"/transcript/{StudentId}");
+    }
+
+    private void Logout()
+    {
+        Navigation.NavigateTo("/login");
     }
 }
