@@ -13,11 +13,16 @@ public class StudentController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly StudentService _studentService;
+    private readonly RegistrationPeriodService _registrationPeriodService;
 
-    public StudentController(AppDbContext context, StudentService studentService)
+    public StudentController(
+        AppDbContext context,
+        StudentService studentService,
+        RegistrationPeriodService registrationPeriodService)
     {
         _context = context;
         _studentService = studentService;
+        _registrationPeriodService = registrationPeriodService;
     }
 
     [HttpPost("login")]
@@ -96,13 +101,14 @@ public class StudentController : ControllerBase
     [HttpPost("{id}/register")]
     public async Task<IActionResult> RegisterCourses(int id, [FromBody] RegisterCoursesRequest request)
     {
-        // The client disables the UI outside the window, but that guard is trivially
-        // bypassed by calling this endpoint directly - enforce it server-side too.
-        // Window is defined once in Shared/RegistrationPeriod.cs.
-        if (!RegistrationPeriod.IsOpen)
+        // Window comes from the RegistrationPeriods table (latest record wins).
+        var period = await _registrationPeriodService.GetCurrentAsync();
+        if (period == null || !period.IsOpen)
         {
             Console.WriteLine($"[DEBUG] Registration rejected for student {id}: outside the registration window.");
-            return StatusCode(StatusCodes.Status403Forbidden, RegistrationPeriod.ClosedMessage);
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                period?.ClosedMessage ?? RegistrationPeriod.NotConfiguredMessage);
         }
 
         if (request == null || request.SelectedSlots == null || !request.SelectedSlots.Any())

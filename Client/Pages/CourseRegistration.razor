@@ -34,7 +34,10 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h3 class="mb-0">Semester Course Registration</h3>
-            <small class="text-muted">Registration window: @RegistrationPeriod.DisplayRange</small>
+            @if (period != null)
+            {
+                <small class="text-muted">Registration window: @period.DisplayRange</small>
+            }
         </div>
         <button class="btn btn-outline-secondary" @onclick="GoBackToMenu">&larr; Back to Dashboard</button>
     </div>
@@ -250,6 +253,7 @@
     [Parameter] public int FacultyId { get; set; }
 
     private StudentHeaderDto? studentHeader;
+    private RegistrationPeriod? period;
 
     private List<CourseDto> availableCourses = new();
     private List<int> selectedSlotIds = new();
@@ -399,8 +403,18 @@
         isLoading = true;
         errorMessage = string.Empty;
 
-        // The registration window lives in Shared/RegistrationPeriod.cs.
-        if (!RegistrationPeriod.IsOpen)
+        // Window comes from the RegistrationPeriods table (latest record wins). A
+        // missing window, or a failed lookup, counts as closed.
+        try
+        {
+            period = await Http.GetFromJsonAsync<RegistrationPeriod?>("api/registrationperiod/current");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[CLIENT LOG] Could not load the registration window: {ex.Message}");
+        }
+
+        if (period == null || !period.IsOpen)
         {
             Navigation.NavigateTo($"/menu/{StudentId}");
             return;

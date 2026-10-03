@@ -38,14 +38,26 @@
                     </div>
                     <div class="mt-4">
                         <button class="btn btn-primary w-100"
-                                disabled="@(!RegistrationPeriod.IsOpen || isLoading)"
+                                disabled="@(!IsRegistrationOpen || isLoading)"
                                 @onclick="GoToRegistration">
                             Go to Registration
                         </button>
-                        @if (!RegistrationPeriod.IsOpen)
+                        @if (!periodLoaded)
+                        {
+                            <small class="text-muted d-block mt-2 text-center">
+                                Checking the registration window...
+                            </small>
+                        }
+                        else if (period == null)
                         {
                             <small class="text-danger d-block mt-2 text-center">
-                                Registration opens @RegistrationPeriod.DisplayRange.
+                                No registration window has been configured.
+                            </small>
+                        }
+                        else if (!IsRegistrationOpen)
+                        {
+                            <small class="text-danger d-block mt-2 text-center">
+                                Registration window: @period.DisplayRange.
                             </small>
                         }
                     </div>
@@ -83,6 +95,27 @@
     private string errorMessage = string.Empty;
     private bool isLoading;
 
+    private RegistrationPeriod? period;
+    private bool periodLoaded;
+
+    // Null period (none configured, or the request failed) means closed.
+    private bool IsRegistrationOpen => period?.IsOpen ?? false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Registration window comes from the RegistrationPeriods table (latest record wins).
+        try
+        {
+            period = await Http.GetFromJsonAsync<RegistrationPeriod?>("api/registrationperiod/current");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[CLIENT LOG] Could not load the registration window: {ex.Message}");
+        }
+
+        periodLoaded = true;
+    }
+
     // Reached via the short "/menu/{StudentId}" route (e.g. the Back buttons on the
     // other pages), so faculty/major/name have to be resolved from the server.
     protected override async Task OnParametersSetAsync()
@@ -113,9 +146,9 @@
 
     private void GoToRegistration()
     {
-        if (!RegistrationPeriod.IsOpen)
+        if (!IsRegistrationOpen)
         {
-            errorMessage = RegistrationPeriod.ClosedMessage;
+            errorMessage = period?.ClosedMessage ?? RegistrationPeriod.NotConfiguredMessage;
             return;
         }
 

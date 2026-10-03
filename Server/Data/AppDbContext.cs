@@ -9,6 +9,7 @@ namespace Server.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<Faculty> Colleges => Set<Faculty>();
+        public DbSet<RegistrationPeriod> RegistrationPeriods => Set<RegistrationPeriod>();
         public DbSet<Major> Majors => Set<Major>();
         public DbSet<Course> Courses { get; set; }
         public DbSet<CourseSchedule> CourseSchedules { get; set; }
@@ -21,10 +22,8 @@ namespace Server.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // EXPLICIT FIX FOR ERROR 547: Ensure EF Core ignores in-memory DTOs as database entities
             modelBuilder.Ignore<ScheduleSlotDto>();
 
-            // Configure Prerequisites Many-to-Many / Join Table
             modelBuilder.Entity<CoursePrerequisite>()
                 .HasKey(cp => new { cp.CourseId, cp.PrerequisiteCourseId });
 
@@ -65,6 +64,33 @@ namespace Server.Data
             {
                 foreignKey.DeleteBehavior = DeleteBehavior.NoAction;
             }
+
+            modelBuilder.Entity<RegistrationPeriod>(entity =>
+            {
+                entity.ToTable("RegistrationPeriods");
+                entity.HasKey(rp => rp.Id);
+                entity.Ignore(rp => rp.IsOpen);
+                entity.Ignore(rp => rp.DisplayRange);
+                entity.Ignore(rp => rp.ClosedMessage);
+            });
+
+            // Which window a registration was submitted under. Optional, so rows
+            // that predate the RegistrationPeriods table keep a null.
+            modelBuilder.Entity<StudentRegistration>()
+                .HasOne(r => r.RegistrationPeriod)
+                .WithMany()
+                .HasForeignKey(r => r.RegistrationPeriodId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<RegistrationPeriod>().HasData(
+                new RegistrationPeriod
+                {
+                    Id = 1,
+                    StartDate = new DateTime(2026, 8, 25, 0, 0, 0),
+                    EndDate = new DateTime(2026, 9, 25, 23, 59, 59),
+                    Description = "Fall 2026/2027"
+                }
+            );
 
             // 1. Seed Faculty
             modelBuilder.Entity<Faculty>().HasData(

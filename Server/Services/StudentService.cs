@@ -8,7 +8,13 @@ namespace Server.Services;
 public class StudentService 
 {
     private readonly AppDbContext _context;
-    public StudentService(AppDbContext context) => _context = context;
+    private readonly RegistrationPeriodService _registrationPeriodService;
+
+    public StudentService(AppDbContext context, RegistrationPeriodService registrationPeriodService)
+    {
+        _context = context;
+        _registrationPeriodService = registrationPeriodService;
+    }
 
     public async Task<EligibilityResultDto> CheckEligibilityAsync(int studentId)
     {
@@ -97,6 +103,23 @@ public class StudentService
             return (false, "Student record not found.");
         }
 
+        var period = await _registrationPeriodService.GetCurrentAsync();
+        if (period == null || !period.IsOpen)
+        {
+            return (false, period?.ClosedMessage ?? RegistrationPeriod.NotConfiguredMessage);
+        }
+
+        // 0b. A student may only submit their registration once per window. Scoped by
+        //     RegistrationPeriodId, so registering in an earlier window does not block
+        //     them in this one.
+        var alreadyRegistered = await _context.StudentRegistrations
+            .AnyAsync(r => r.StudentId == studentId && r.RegistrationPeriodId == period.Id);
+
+        if (alreadyRegistered)
+        {
+            return (false, "You have already submitted your course registration. Contact the registrar's office to make changes.");
+        }
+
         var eligibility = await CheckEligibilityAsync(studentId);
         if (!eligibility.IsEligible)
         {
@@ -160,9 +183,12 @@ public class StudentService
         
         var incomingCourseCodes = targetCourses.Select(c => c.Code).ToList();
 
+        // Only this window's registrations can clash - an old semester's timetable is
+        // not something the student is still attending.
         var existingSlotIds = await _context.StudentRegistrations
-            .Where(r => r.StudentId == studentId 
-                    && r.ScheduleSlotId.HasValue 
+            .Where(r => r.StudentId == studentId
+                    && r.RegistrationPeriodId == period.Id
+                    && r.ScheduleSlotId.HasValue
                     && !incomingCourseCodes.Contains(r.CourseCode))
             .Select(r => r.ScheduleSlotId!.Value)
             .ToListAsync();
@@ -202,16 +228,8 @@ public class StudentService
             }
         }
 
-        // 6. Overwrite Previous Term Registrations & Save New Entries
-        var previousRegistrations = await _context.StudentRegistrations
-            .Where(r => r.StudentId == studentId)
-            .ToListAsync();
-
-        if (previousRegistrations.Any())
-        {
-            _context.StudentRegistrations.RemoveRange(previousRegistrations);
-        }
-
+        // Note: no "remove previous registrations" step here any more - check 0b above
+        // rejects the submission outright if the student already has registrations.
         foreach (var slot in selectedCourseSlots)
         {
             var course = targetCourses.First(c => c.Id == slot.CourseId);
@@ -221,7 +239,8 @@ public class StudentService
                 StudentId = studentId,
                 CourseCode = course.Code,
                 CreditHours = course.CreditHours,
-                ScheduleSlotId = slot.ScheduleSlotId
+                ScheduleSlotId = slot.ScheduleSlotId,
+                RegistrationPeriodId = period.Id
             });
         }
 

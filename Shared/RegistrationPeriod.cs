@@ -1,16 +1,40 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Shared;
 
-
-public static class RegistrationPeriod
+/// <summary>
+/// The semester registration window, stored as a record in the database so it can
+/// be changed without touching code or rebuilding. The most recently added record
+/// (highest <see cref="Id"/>) is the one in effect, so opening a new window means
+/// inserting a new row - or just editing the dates on the existing one.
+/// </summary>
+public class RegistrationPeriod
 {
-    public static readonly DateTime StartDate = new(2026, 8, 25, 0, 0, 0);
-    public static readonly DateTime EndDate = new(2026, 9, 25, 23, 59, 59);
+    public int Id { get; set; }
 
-    public static bool IsOpen => IsOpenAt(DateTime.Now);
+    public DateTime StartDate { get; set; }
 
-    public static bool IsOpenAt(DateTime when) => when >= StartDate && when <= EndDate;
+    public DateTime EndDate { get; set; }
 
-    public static string DisplayRange => $"{StartDate:MMM d, yyyy} - {EndDate:MMM d, yyyy}";
+    /// <summary>Optional label for the record, e.g. "Fall 2026/2027".</summary>
+    [MaxLength(200)]
+    public string? Description { get; set; }
 
-    public static string ClosedMessage => $"Registration is currently closed. It opens {DisplayRange}.";
+    [NotMapped]
+    public bool IsOpen => IsOpenAt(DateTime.Now);
+
+    public bool IsOpenAt(DateTime when) => when >= StartDate && when <= EndDate;
+
+    /// <summary>e.g. "Aug 25, 2026 - Sep 25, 2026"</summary>
+    [NotMapped]
+    public string DisplayRange => $"{StartDate:MMM d, yyyy} - {EndDate:MMM d, yyyy}";
+
+    [NotMapped]
+    public string ClosedMessage =>
+        $"Registration is currently closed. The registration window is {DisplayRange}.";
+
+    /// <summary>Message to show when no window has been configured in the database at all.</summary>
+    public const string NotConfiguredMessage =
+        "Registration is currently closed. No registration window has been configured.";
 }

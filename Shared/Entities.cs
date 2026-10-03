@@ -181,4 +181,14 @@ public class StudentRegistration
 
     public int CreditHours { get; set; }
     public int? ScheduleSlotId { get; set; }
+
+    /// <summary>
+    /// The registration window this row was submitted under. Nullable because rows
+    /// created before periods existed have no window to point at.
+    /// </summary>
+    public int? RegistrationPeriodId { get; set; }
+
+    [ForeignKey(nameof(RegistrationPeriodId))]
+    [JsonIgnore]
+    public RegistrationPeriod? RegistrationPeriod { get; set; }
 }

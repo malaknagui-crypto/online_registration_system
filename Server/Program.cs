@@ -21,6 +21,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // 3. Register Services & Controllers
 builder.Services.AddScoped<StudentService>();
+builder.Services.AddScoped<RegistrationPeriodService>();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {

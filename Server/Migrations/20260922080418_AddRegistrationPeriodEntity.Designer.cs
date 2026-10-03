@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Server.Data;
 
@@ -11,9 +12,11 @@ using Server.Data;
 namespace Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260922080418_AddRegistrationPeriodEntity")]
+    partial class AddRegistrationPeriodEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -478,9 +481,6 @@ namespace Server.Migrations
                     b.Property<int>("CreditHours")
                         .HasColumnType("int");
 
-                    b.Property<int?>("RegistrationPeriodId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("ScheduleSlotId")
                         .HasColumnType("int");
 
@@ -488,8 +488,6 @@ namespace Server.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("RegistrationPeriodId");
 
                     b.HasIndex("StudentId");
 
@@ -665,18 +663,11 @@ namespace Server.Migrations
 
             modelBuilder.Entity("Shared.Models.StudentRegistration", b =>
                 {
-                    b.HasOne("Shared.RegistrationPeriod", "RegistrationPeriod")
-                        .WithMany()
-                        .HasForeignKey("RegistrationPeriodId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.HasOne("Shared.Models.Student", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
-
-                    b.Navigation("RegistrationPeriod");
 
                     b.Navigation("Student");
                 });
