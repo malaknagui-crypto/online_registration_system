@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Server.Data;
 
@@ -11,9 +12,11 @@ using Server.Data;
 namespace Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261004072204_AddMajorsAndAssignStudents")]
+    partial class AddMajorsAndAssignStudents
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -663,8 +666,8 @@ namespace Server.Migrations
                         {
                             Id = 1,
                             Description = "Fall 2026/2027",
-                            EndDate = new DateTime(2026, 10, 25, 23, 59, 59, 0, DateTimeKind.Unspecified),
-                            StartDate = new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                            EndDate = new DateTime(2026, 9, 25, 23, 59, 59, 0, DateTimeKind.Unspecified),
+                            StartDate = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Unspecified)
                         });
                 });
 

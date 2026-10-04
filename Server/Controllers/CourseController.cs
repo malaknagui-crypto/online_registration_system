@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Server.Data;
 using Shared.Models;
@@ -167,6 +167,213 @@ public class CourseController : ControllerBase
                                 Day = DayOfWeek.Monday, 
                                 StartTime = new TimeSpan(14, 30, 0), 
                                 EndTime = new TimeSpan(16, 0, 0) 
+                            }
+                        },
+                        "SWE201" => new List<ScheduleSlotDto>
+                        {
+                            new ScheduleSlotDto
+                            {
+                                Id = 11,
+                                SectionName = "Section 1",
+                                LecturerName = "Dr. Barry Boehm",
+                                TaName = "Eng. Nada",
+                                Day = DayOfWeek.Monday,
+                                StartTime = new TimeSpan(8, 30, 0),
+                                EndTime = new TimeSpan(10, 0, 0)
+                            },
+                            new ScheduleSlotDto
+                            {
+                                Id = 12,
+                                SectionName = "Section 2",
+                                LecturerName = "Dr. Ivar Jacobson",
+                                TaName = "Eng. Tarek",
+                                Day = DayOfWeek.Wednesday,
+                                StartTime = new TimeSpan(12, 30, 0),
+                                EndTime = new TimeSpan(14, 0, 0)
+                            }
+                        },
+                        "SWE310" => new List<ScheduleSlotDto>
+                        {
+                            new ScheduleSlotDto
+                            {
+                                Id = 13,
+                                SectionName = "Section 1",
+                                LecturerName = "Dr. Glenford Myers",
+                                TaName = "Eng. Hana",
+                                Day = DayOfWeek.Tuesday,
+                                StartTime = new TimeSpan(10, 30, 0),
+                                EndTime = new TimeSpan(12, 0, 0)
+                            },
+                            new ScheduleSlotDto
+                            {
+                                Id = 14,
+                                SectionName = "Section 2",
+                                LecturerName = "Dr. Cem Kaner",
+                                TaName = "Eng. Youssef",
+                                Day = DayOfWeek.Thursday,
+                                StartTime = new TimeSpan(8, 30, 0),
+                                EndTime = new TimeSpan(10, 0, 0)
+                            }
+                        },
+                        "SWE330" => new List<ScheduleSlotDto>
+                        {
+                            new ScheduleSlotDto
+                            {
+                                Id = 15,
+                                SectionName = "Section 1",
+                                LecturerName = "Dr. Kent Beck",
+                                TaName = "Eng. Salma",
+                                Day = DayOfWeek.Wednesday,
+                                StartTime = new TimeSpan(14, 30, 0),
+                                EndTime = new TimeSpan(16, 0, 0)
+                            },
+                            new ScheduleSlotDto
+                            {
+                                Id = 16,
+                                SectionName = "Section 2",
+                                LecturerName = "Dr. Martin Fowler",
+                                TaName = "Eng. Tarek",
+                                Day = DayOfWeek.Monday,
+                                StartTime = new TimeSpan(12, 30, 0),
+                                EndTime = new TimeSpan(14, 0, 0)
+                            }
+                        },
+                        "IS210" => new List<ScheduleSlotDto>
+                        {
+                            new ScheduleSlotDto
+                            {
+                                Id = 17,
+                                SectionName = "Section 1",
+                                LecturerName = "Dr. Peter Checkland",
+                                TaName = "Eng. Dina",
+                                Day = DayOfWeek.Monday,
+                                StartTime = new TimeSpan(10, 30, 0),
+                                EndTime = new TimeSpan(12, 0, 0)
+                            },
+                            new ScheduleSlotDto
+                            {
+                                Id = 18,
+                                SectionName = "Section 2",
+                                LecturerName = "Dr. Enid Mumford",
+                                TaName = "Eng. Karim",
+                                Day = DayOfWeek.Wednesday,
+                                StartTime = new TimeSpan(8, 30, 0),
+                                EndTime = new TimeSpan(10, 0, 0)
+                            }
+                        },
+                        "IS320" => new List<ScheduleSlotDto>
+                        {
+                            new ScheduleSlotDto
+                            {
+                                Id = 19,
+                                SectionName = "Section 1",
+                                LecturerName = "Dr. Hasso Plattner",
+                                TaName = "Eng. Dina",
+                                Day = DayOfWeek.Tuesday,
+                                StartTime = new TimeSpan(12, 30, 0),
+                                EndTime = new TimeSpan(14, 0, 0)
+                            },
+                            new ScheduleSlotDto
+                            {
+                                Id = 20,
+                                SectionName = "Section 2",
+                                LecturerName = "Dr. Nabil Fahmy",
+                                TaName = "Eng. Karim",
+                                Day = DayOfWeek.Thursday,
+                                StartTime = new TimeSpan(10, 30, 0),
+                                EndTime = new TimeSpan(12, 0, 0)
+                            }
+                        },
+                        "IS340" => new List<ScheduleSlotDto>
+                        {
+                            new ScheduleSlotDto
+                            {
+                                Id = 21,
+                                SectionName = "Section 1",
+                                LecturerName = "Dr. Ralph Kimball",
+                                TaName = "Eng. Laila",
+                                Day = DayOfWeek.Thursday,
+                                StartTime = new TimeSpan(14, 30, 0),
+                                EndTime = new TimeSpan(16, 0, 0)
+                            },
+                            new ScheduleSlotDto
+                            {
+                                Id = 22,
+                                SectionName = "Section 2",
+                                LecturerName = "Dr. Bill Inmon",
+                                TaName = "Eng. Dina",
+                                Day = DayOfWeek.Friday,
+                                StartTime = new TimeSpan(8, 30, 0),
+                                EndTime = new TimeSpan(10, 0, 0)
+                            }
+                        },
+                        "MM150" => new List<ScheduleSlotDto>
+                        {
+                            new ScheduleSlotDto
+                            {
+                                Id = 23,
+                                SectionName = "Section 1",
+                                LecturerName = "Dr. Ivan Sutherland",
+                                TaName = "Eng. Rana",
+                                Day = DayOfWeek.Monday,
+                                StartTime = new TimeSpan(14, 30, 0),
+                                EndTime = new TimeSpan(16, 0, 0)
+                            },
+                            new ScheduleSlotDto
+                            {
+                                Id = 24,
+                                SectionName = "Section 2",
+                                LecturerName = "Dr. Ed Catmull",
+                                TaName = "Eng. Omar",
+                                Day = DayOfWeek.Wednesday,
+                                StartTime = new TimeSpan(10, 30, 0),
+                                EndTime = new TimeSpan(12, 0, 0)
+                            }
+                        },
+                        "MM240" => new List<ScheduleSlotDto>
+                        {
+                            new ScheduleSlotDto
+                            {
+                                Id = 25,
+                                SectionName = "Section 1",
+                                LecturerName = "Dr. Ed Catmull",
+                                TaName = "Eng. Rana",
+                                Day = DayOfWeek.Tuesday,
+                                StartTime = new TimeSpan(8, 30, 0),
+                                EndTime = new TimeSpan(10, 0, 0)
+                            },
+                            new ScheduleSlotDto
+                            {
+                                Id = 26,
+                                SectionName = "Section 2",
+                                LecturerName = "Dr. Loren Carpenter",
+                                TaName = "Eng. Hossam",
+                                Day = DayOfWeek.Thursday,
+                                StartTime = new TimeSpan(12, 30, 0),
+                                EndTime = new TimeSpan(14, 0, 0)
+                            }
+                        },
+                        "MM360" => new List<ScheduleSlotDto>
+                        {
+                            new ScheduleSlotDto
+                            {
+                                Id = 27,
+                                SectionName = "Section 1",
+                                LecturerName = "Dr. Jakob Nielsen",
+                                TaName = "Eng. Rana",
+                                Day = DayOfWeek.Wednesday,
+                                StartTime = new TimeSpan(12, 30, 0),
+                                EndTime = new TimeSpan(14, 0, 0)
+                            },
+                            new ScheduleSlotDto
+                            {
+                                Id = 28,
+                                SectionName = "Section 2",
+                                LecturerName = "Dr. Don Norman",
+                                TaName = "Eng. Hossam",
+                                Day = DayOfWeek.Friday,
+                                StartTime = new TimeSpan(10, 30, 0),
+                                EndTime = new TimeSpan(12, 0, 0)
                             }
                         },
                         // Default fallback slot for any other course in database

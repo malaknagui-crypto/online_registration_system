@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Shared; // Contains StudentStatus enum
 using Shared.Models;
 
@@ -86,8 +86,8 @@ namespace Server.Data
                 new RegistrationPeriod
                 {
                     Id = 1,
-                    StartDate = new DateTime(2026, 8, 25, 0, 0, 0),
-                    EndDate = new DateTime(2026, 9, 25, 23, 59, 59),
+                    StartDate = new DateTime(2026, 9, 25, 0, 0, 0),
+                    EndDate = new DateTime(2026, 10, 25, 23, 59, 59),
                     Description = "Fall 2026/2027"
                 }
             );
@@ -99,7 +99,10 @@ namespace Server.Data
 
             // 2. Seed Major
             modelBuilder.Entity<Major>().HasData(
-                new Major { Id = 1, Name = "Computer Science", FacultyId = 1 }
+                new Major { Id = 1, Name = "Computer Science", FacultyId = 1, IsRegistrationOpen = true },
+                new Major { Id = 2, Name = "Software Engineering", FacultyId = 1, IsRegistrationOpen = true },
+                new Major { Id = 3, Name = "Information Systems", FacultyId = 1, IsRegistrationOpen = true },
+                new Major { Id = 4, Name = "Multimedia", FacultyId = 1, IsRegistrationOpen = true }
             );
 
             // 3. Seed Courses
@@ -108,7 +111,22 @@ namespace Server.Data
                 new Course { Id = 2, Code = "CS202", Title = "Data Structures & Algorithms", CreditHours = 4, MajorId = 1, FacultyId = 1 },
                 new Course { Id = 3, Code = "DB301", Title = "Database Systems", CreditHours = 3, MajorId = 1, FacultyId = 1 },
                 new Course { Id = 4, Code = "MATH101", Title = "Calculus 1", CreditHours = 3, FacultyId = 1, MajorId = 1 },
-                new Course { Id = 5, Code = "MATH102", Title = "Calculus 2", CreditHours = 3, FacultyId = 1, MajorId = 1 }
+                new Course { Id = 5, Code = "MATH102", Title = "Calculus 2", CreditHours = 3, FacultyId = 1, MajorId = 1 },
+
+                // Software Engineering (MajorId 2)
+                new Course { Id = 6, Code = "SWE201", Title = "Software Requirements Engineering", CreditHours = 3, FacultyId = 1, MajorId = 2 },
+                new Course { Id = 7, Code = "SWE310", Title = "Software Testing & Quality Assurance", CreditHours = 3, FacultyId = 1, MajorId = 2 },
+                new Course { Id = 8, Code = "SWE330", Title = "Agile Project Management", CreditHours = 3, FacultyId = 1, MajorId = 2 },
+
+                // Information Systems (MajorId 3)
+                new Course { Id = 9, Code = "IS210", Title = "Information Systems Analysis", CreditHours = 3, FacultyId = 1, MajorId = 3 },
+                new Course { Id = 10, Code = "IS320", Title = "Enterprise Resource Planning", CreditHours = 3, FacultyId = 1, MajorId = 3 },
+                new Course { Id = 11, Code = "IS340", Title = "Business Intelligence & Analytics", CreditHours = 3, FacultyId = 1, MajorId = 3 },
+
+                // Multimedia (MajorId 4)
+                new Course { Id = 12, Code = "MM150", Title = "Digital Media Fundamentals", CreditHours = 3, FacultyId = 1, MajorId = 4 },
+                new Course { Id = 13, Code = "MM240", Title = "3D Modeling & Animation", CreditHours = 4, FacultyId = 1, MajorId = 4 },
+                new Course { Id = 14, Code = "MM360", Title = "Interactive Web Design", CreditHours = 3, FacultyId = 1, MajorId = 4 }
             );
 
             // 4. Seed Course Prerequisites
@@ -183,7 +201,7 @@ namespace Server.Data
                     FacultyId = 1,
                     Gpa = 2.6,
                     Status = StudentStatus.Active, 
-                    MajorId = 1 
+                    MajorId = 2 
                 },
                 new Student 
                 { 
@@ -194,7 +212,7 @@ namespace Server.Data
                     FacultyId = 1,
                     Gpa = 3.1,
                     Status = StudentStatus.Active, 
-                    MajorId = 1 
+                    MajorId = 3 
                 },
                 new Student 
                 { 
@@ -205,7 +223,7 @@ namespace Server.Data
                     FacultyId = 1,
                     Gpa = 3.7,
                     Status = StudentStatus.Active, 
-                    MajorId = 1 
+                    MajorId = 4 
                 }
             );
 

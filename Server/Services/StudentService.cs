@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Server.Data;
 using Shared.Models;
 using Shared;
@@ -270,7 +270,35 @@ public class StudentService
             
             // MATH102
             new ScheduleSlotDto { Id = 9, SectionName = "Section 1", Day = DayOfWeek.Wednesday, StartTime = new TimeSpan(8, 30, 0), EndTime = new TimeSpan(10, 0, 0) },
-            new ScheduleSlotDto { Id = 10, SectionName = "Section 2", Day = DayOfWeek.Monday, StartTime = new TimeSpan(14, 30, 0), EndTime = new TimeSpan(16, 0, 0) }
+            new ScheduleSlotDto { Id = 10, SectionName = "Section 2", Day = DayOfWeek.Monday, StartTime = new TimeSpan(14, 30, 0), EndTime = new TimeSpan(16, 0, 0) },
+
+            // SWE201
+            new ScheduleSlotDto { Id = 11, SectionName = "Section 1", Day = DayOfWeek.Monday, StartTime = new TimeSpan(8, 30, 0), EndTime = new TimeSpan(10, 0, 0) },
+            new ScheduleSlotDto { Id = 12, SectionName = "Section 2", Day = DayOfWeek.Wednesday, StartTime = new TimeSpan(12, 30, 0), EndTime = new TimeSpan(14, 0, 0) },
+            // SWE310
+            new ScheduleSlotDto { Id = 13, SectionName = "Section 1", Day = DayOfWeek.Tuesday, StartTime = new TimeSpan(10, 30, 0), EndTime = new TimeSpan(12, 0, 0) },
+            new ScheduleSlotDto { Id = 14, SectionName = "Section 2", Day = DayOfWeek.Thursday, StartTime = new TimeSpan(8, 30, 0), EndTime = new TimeSpan(10, 0, 0) },
+            // SWE330
+            new ScheduleSlotDto { Id = 15, SectionName = "Section 1", Day = DayOfWeek.Wednesday, StartTime = new TimeSpan(14, 30, 0), EndTime = new TimeSpan(16, 0, 0) },
+            new ScheduleSlotDto { Id = 16, SectionName = "Section 2", Day = DayOfWeek.Monday, StartTime = new TimeSpan(12, 30, 0), EndTime = new TimeSpan(14, 0, 0) },
+            // IS210
+            new ScheduleSlotDto { Id = 17, SectionName = "Section 1", Day = DayOfWeek.Monday, StartTime = new TimeSpan(10, 30, 0), EndTime = new TimeSpan(12, 0, 0) },
+            new ScheduleSlotDto { Id = 18, SectionName = "Section 2", Day = DayOfWeek.Wednesday, StartTime = new TimeSpan(8, 30, 0), EndTime = new TimeSpan(10, 0, 0) },
+            // IS320
+            new ScheduleSlotDto { Id = 19, SectionName = "Section 1", Day = DayOfWeek.Tuesday, StartTime = new TimeSpan(12, 30, 0), EndTime = new TimeSpan(14, 0, 0) },
+            new ScheduleSlotDto { Id = 20, SectionName = "Section 2", Day = DayOfWeek.Thursday, StartTime = new TimeSpan(10, 30, 0), EndTime = new TimeSpan(12, 0, 0) },
+            // IS340
+            new ScheduleSlotDto { Id = 21, SectionName = "Section 1", Day = DayOfWeek.Thursday, StartTime = new TimeSpan(14, 30, 0), EndTime = new TimeSpan(16, 0, 0) },
+            new ScheduleSlotDto { Id = 22, SectionName = "Section 2", Day = DayOfWeek.Friday, StartTime = new TimeSpan(8, 30, 0), EndTime = new TimeSpan(10, 0, 0) },
+            // MM150
+            new ScheduleSlotDto { Id = 23, SectionName = "Section 1", Day = DayOfWeek.Monday, StartTime = new TimeSpan(14, 30, 0), EndTime = new TimeSpan(16, 0, 0) },
+            new ScheduleSlotDto { Id = 24, SectionName = "Section 2", Day = DayOfWeek.Wednesday, StartTime = new TimeSpan(10, 30, 0), EndTime = new TimeSpan(12, 0, 0) },
+            // MM240
+            new ScheduleSlotDto { Id = 25, SectionName = "Section 1", Day = DayOfWeek.Tuesday, StartTime = new TimeSpan(8, 30, 0), EndTime = new TimeSpan(10, 0, 0) },
+            new ScheduleSlotDto { Id = 26, SectionName = "Section 2", Day = DayOfWeek.Thursday, StartTime = new TimeSpan(12, 30, 0), EndTime = new TimeSpan(14, 0, 0) },
+            // MM360
+            new ScheduleSlotDto { Id = 27, SectionName = "Section 1", Day = DayOfWeek.Wednesday, StartTime = new TimeSpan(12, 30, 0), EndTime = new TimeSpan(14, 0, 0) },
+            new ScheduleSlotDto { Id = 28, SectionName = "Section 2", Day = DayOfWeek.Friday, StartTime = new TimeSpan(10, 30, 0), EndTime = new TimeSpan(12, 0, 0) },
         };
 
         return allSlots.Where(s => slotIds.Contains(s.Id)).ToList();
